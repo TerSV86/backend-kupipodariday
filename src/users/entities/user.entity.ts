@@ -1,4 +1,5 @@
-import { Contains, IsEmail, IsUrl, Length } from 'class-validator';
+import { IsEmail, IsUrl, Length } from 'class-validator';
+import { Offer } from 'src/offers/entities/offer.entity';
 import { Wish } from 'src/wishes/entities/wish.entity';
 import { Wishlist } from 'src/wishlists/entities/wishlist.entity';
 import {
@@ -21,7 +22,7 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ type: 'varchar', length: 30 })
+  @Column({ unique: true })
   @Length(2, 30)
   username: string;
 
@@ -29,12 +30,11 @@ export class User {
   @Length(2, 200)
   about: string;
 
-  @Column()
+  @Column({ default: 'https://i.pravatar.cc/300' })
   @IsUrl()
-  @Contains('https://i.pravatar.cc/300')
   avatar: string;
 
-  @Column()
+  @Column({ unique: true })
   @IsEmail()
   email: string;
 
@@ -44,8 +44,8 @@ export class User {
   @OneToMany(() => Wish, (wish) => wish.owner)
   wihses: Wish[];
 
-  @OneToMany(() => Wish, (wish) => wish.name)
-  offers: Wish[];
+  @OneToMany(() => Offer, (offer) => offer.user)
+  offers: Offer[];
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
   wishlist: Wishlist[];

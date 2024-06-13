@@ -1,4 +1,6 @@
+import { Transform } from 'class-transformer';
 import { Contains } from 'class-validator';
+import { User } from 'src/users/entities/user.entity';
 import { Wish } from 'src/wishes/entities/wish.entity';
 import {
   Column,
@@ -20,11 +22,14 @@ export class Offer {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column()
-  userId: string;
+  /* @Column()
+  userId: number; */
 
   @ManyToOne(() => Wish, (wish) => wish.offers)
   item: Wish;
+
+  @ManyToOne(() => User, (user) => user.id)
+  user: User;
 
   @Column()
   amount: number;
