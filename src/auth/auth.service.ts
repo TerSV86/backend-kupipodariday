@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hashValue, verifyHash } from 'src/helpers/hash';
 
@@ -27,6 +27,8 @@ export class AuthService {
       console.log(user, result);
 
       return result;
+    } else {
+      throw new HttpException('Некорректная пара логин и пароль', 401);
     }
     /* console.log('tyt'); */
 
@@ -34,10 +36,11 @@ export class AuthService {
   }
 
   async login(user: User) {
-    /* console.log('auth', user); */
     const { username, id: sub } = user;
-    return {
+    const access_token = {
       access_token: await this.jwtService.signAsync({ username, sub }),
     };
+    console.log('auth', user, access_token);
+    return access_token;
   }
 }

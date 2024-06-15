@@ -1,4 +1,5 @@
 import {
+  HttpException,
   /* BadRequestException, */ Inject,
   Injectable,
   forwardRef,
@@ -45,12 +46,25 @@ export class UsersService {
   async signup(createUserDto: CreateUserDto): Promise<User> {
     /* console.log('singup', createUserDto); */
 
-    const { password } = createUserDto;
+    const { password, email, username } = createUserDto;
+    const existingEmail = await this.userRepository.findOne({
+      where: { email },
+    });
+    const existingUsername = await this.userRepository.findOne({
+      where: { username },
+    });
     const user = await this.userRepository.create({
       ...createUserDto,
       password: await hashValue(password),
     });
-    return this.userRepository.save(user);
+    if (user && !existingEmail && !existingUsername)
+      return this.userRepository.save(user);
+    else {
+      throw new HttpException(
+        'Пользователь с таким email или username уже зарегистрирован',
+        409,
+      );
+    }
   }
 
   async findOne(query: FindOneOptions<User>) {
@@ -84,34 +98,37 @@ export class UsersService {
   async findUserWishes(username: string) {
     const userId = (await this.userRepository.findOne({ where: { username } }))
       .id;
-    const user = await this.wishesService.findUserId(userId);
-    return user;
+    const userWishes = await this.wishesService.findUserId(userId);
+    return userWishes;
   }
 
   async update(user: User, updateUserDto: UpdateUserDto) {
     const userDB = await this.userRepository.findOneOrFail({
       where: { id: user.id },
     });
-
     const { email, username, about, avatar, password } = updateUserDto;
-
     // Проверяем уникальность email
     if (email && email !== userDB.email) {
       const emailExists = await this.userRepository.findOne({
         where: { email },
       });
       if (emailExists) {
-        throw new Error('Пользователь с таким email уже существует');
+        throw new HttpException(
+          'Пользователь с таким email уже существует',
+          400,
+        );
       }
     }
-
     // Проверяем уникальность username
     if (username && username !== userDB.username) {
       const usernameExists = await this.userRepository.findOne({
         where: { username },
       });
       if (usernameExists) {
-        throw new Error('Пользователь с таким именем уже существует');
+        throw new HttpException(
+          'Пользователь с таким именем уже существует',
+          400,
+        );
       }
     }
     let hashPassword;
@@ -119,7 +136,6 @@ export class UsersService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       hashPassword = await hashValue(password);
     }
-
     // Обновляем поля
     const updatedUser = {
       ...userDB,
@@ -129,9 +145,44 @@ export class UsersService {
       avatar: avatar || userDB.avatar,
       password: hashPassword || userDB.password,
     };
-    /*  console.log('updateUser', updatedUser); */
+    await this.userRepository.save(updatedUser);
+    const res: FindOneOptions<User> = {
+      where: { id: user.id },
+      select: {
+        email: true,
+        username: true,
+        id: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+        about: true,
+      },
+    };
 
-    return this.userRepository.save(updatedUser);
+    return this.userRepository.findOne(res);
+  }
+  /* async findByQuery(query: string) {
+
+    const user = await this.userRepository.find({
+      where: { username: query },
+    });
+    console.log(name);
+    return user;
+  } */
+
+  async findByQuery(query: string): Promise<User[]> {
+    const users = await this.userRepository.find({
+      where: [{ username: query }, { email: query }],
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        username: true,
+        about: true,
+        avatar: true,
+      },
+    });
+    return users;
   }
 
   remove(id: number) {

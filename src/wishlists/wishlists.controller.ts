@@ -14,6 +14,7 @@ import { UpdateWishlistDto } from './dto/update-wishlist.dto';
 import { JWTAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { AuthUser } from 'src/common/decorators/user.decorator';
 import { User } from 'src/users/entities/user.entity';
+import { Wishlist } from './entities/wishlist.entity';
 
 @UseGuards(JWTAuthGuard)
 @Controller('wishlistlists')
@@ -21,31 +22,34 @@ export class WishlistsController {
   constructor(private readonly wishlistsService: WishlistsService) {}
 
   @Post()
-  create(@Body() createWishlistDto: CreateWishlistDto, @AuthUser() user: User) {
+  create(
+    @Body() createWishlistDto: CreateWishlistDto,
+    @AuthUser() user: User,
+  ): Promise<Wishlist> {
     /* console.log('wishlist'); */
     return this.wishlistsService.create(createWishlistDto, user.id);
   }
 
   @Get()
-  findAll() {
-    return this.wishlistsService.findAll();
+  findWishlist(@AuthUser() user: User): Promise<Wishlist[]> {
+    return this.wishlistsService.findWishlist(user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.wishlistsService.findOne(+id);
+  findWishes(@Param('id') id: string): Promise<Wishlist> {
+    return this.wishlistsService.findWishes(+id);
   }
 
   @Patch(':id')
   update(
     @Param('id') id: string,
     @Body() updateWishlistDto: UpdateWishlistDto,
-  ) {
-    return this.wishlistsService.update(+id, updateWishlistDto);
+  ): Promise<Wishlist> {
+    return this.wishlistsService.updateWishlist(+id, updateWishlistDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string): Promise<Wishlist> {
     return this.wishlistsService.remove(+id);
   }
 }

@@ -1,11 +1,16 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { CreateOfferDto } from './dto/create-offer.dto';
-import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Offer } from './entities/offer.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { WishesService } from 'src/wishes/wishes.service';
+import { resOffers } from 'src/utils/data';
 
 @Injectable()
 export class OffersService {
@@ -18,22 +23,30 @@ export class OffersService {
     private readonly wishesService: WishesService,
   ) {}
 
-  async create(
-    createOfferDto: CreateOfferDto,
-    userID: number /* item: string */,
-  ) {
-    /* console.log('OffersService', createOfferDto, user); */
+  async create(createOfferDto: CreateOfferDto, userID: number) {
     const user = await this.usersService.findById(userID);
     const wish = await this.wishesService.findOne(
       `${createOfferDto.itemId}`,
       user.id,
     );
+    console.log(wish.owner.id, user.id);
+    if (wish.owner.id === user.id) {
+      console.log('tyt');
+      throw new ForbiddenException(
+        'Вы не можете внести взнос в собственный подарок',
+      );
+    }
     const raisedWish = await this.offersRepository
       .createQueryBuilder('offer')
       .select('SUM(offer.amount)', 'sum')
       .where('offer.itemId = :wishId', { wishId: createOfferDto.itemId })
       .getRawOne();
     const calculateRaised = +raisedWish.sum + createOfferDto.amount;
+    if (calculateRaised > wish.price) {
+      throw new ForbiddenException(
+        'Ваш взнос не должен привышать стоимость подарка',
+      );
+    }
     const offer = await this.offersRepository.create({
       ...createOfferDto,
       user,
@@ -44,21 +57,14 @@ export class OffersService {
     return this.offersRepository.save(offer);
   }
 
-  findAll(id: number) {
-    return this.offersRepository.find({
-      where: { item: { id } },
-    });
+  findAll(/* id: number */) {
+    return this.offersRepository.find(resOffers);
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} offer`;
-  }
-
-  update(id: number, updateOfferDto: UpdateOfferDto) {
-    return `This action updates a #${id} offer`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} offer`;
+    return this.offersRepository.findOne({
+      where: { id },
+      ...resOffers,
+    });
   }
 }

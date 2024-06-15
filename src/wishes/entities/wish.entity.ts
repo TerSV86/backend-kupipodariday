@@ -21,7 +21,7 @@ export class Wish {
   createdAt: Date;
 
   @UpdateDateColumn()
-  updated: Date;
+  updatedAt: Date;
 
   @Column({ type: 'varchar', length: 250 })
   @Length(1, 250)

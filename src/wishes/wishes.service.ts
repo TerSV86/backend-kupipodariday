@@ -1,4 +1,4 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, forwardRef } from '@nestjs/common';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
 import { Repository } from 'typeorm';
@@ -16,7 +16,7 @@ export class WishesService {
     private readonly usersService: UsersService,
     @Inject(forwardRef(() => OffersService))
     private readonly offersService: OffersService,
-  ) {}
+  ) { }
 
   async createWish(createWishDto: CreateWishDto, id: number): Promise<Wish> {
     const owner = await this.usersService.findById(id);
@@ -31,7 +31,7 @@ export class WishesService {
   async findWishById(user_id: number): Promise<Wish[]> {
     const wishes = await this.wishesRepository.find({
       where: { owner: { id: user_id } },
-      relations: ['owner', 'offers'],
+      /* relations: ['owner', 'offers'], */
     });
     return wishes;
   }
@@ -48,29 +48,76 @@ export class WishesService {
     const wish = await this.wishesRepository.findOne({
       where: { id },
       relations: ['owner', 'offers', 'offers.user'],
+      select: {
+        owner: {
+          id: true,
+          username: true,
+          about: true,
+          avatar: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        offers: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          amount: true,
+          hidden: true,
+          user: {
+            id: true,
+            username: true,
+            about: true,
+            avatar: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
     });
-    /* console.log('WishesService-findOne', user, wish); */
+    //frontend использует name а не username
     const transformedOffers = wish.offers.map((offer) => ({
       ...offer,
       name: offer.user.username,
       createdAt: wish.createdAt.toISOString().split('T')[0],
     }));
-
-    return { ...wish, offers: transformedOffers };
+    const transformWish = { ...wish, offers: transformedOffers };
+    return transformWish;
   }
 
-  async findLast(): Promise<any> {
+  async findLast(): Promise<Wish[]> {
     const lastWish = await this.wishesRepository.find({
       order: { createdAt: 'DESC' },
       relations: ['owner', 'offers'],
+      select: {
+        owner: {
+          id: true,
+          username: true,
+          about: true,
+          avatar: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+      take: 40,
     });
     return lastWish;
   }
 
-  async findTopWish(): Promise<any> {
+  async findTopWish(): Promise<Wish[]> {
     const topWish = await this.wishesRepository.find({
-      order: { copied: 'ASC' },
+      order: { copied: 'DESC' },
       relations: ['owner', 'offers'],
+      select: {
+        owner: {
+          id: true,
+          username: true,
+          about: true,
+          avatar: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+      take: 20,
     });
     return topWish;
   }
@@ -79,7 +126,7 @@ export class WishesService {
     return this.wishesRepository.findOneBy({ id });
   }
 
-  async findUserId(userId: number): Promise<any> {
+  async findUserId(userId: number): Promise<Wish[]> {
     return await this.wishesRepository.find({
       where: { owner: { id: userId } },
       relations: [
@@ -92,27 +139,60 @@ export class WishesService {
     });
   }
 
-  async updateRaised(raised: number, wish: Wish) {
+  async updateRaised(raised: number, wish: Wish): Promise<Wish> {
     wish.raised = raised;
     return this.wishesRepository.save(wish);
   }
 
-  async copy(id: number, user: User) {
-    const owner = await this.usersService.findById(user.id)
-    const wish = await this.wishesRepository.findOneByOrFail({ id });
-    const { description, image, link, name, price } = wish;
-    const copyWish = this.wishesRepository.create({
-      description,
-      image,
-      link,
-      name,
-      price,
-      owner,
-    });
-    return this.wishesRepository.save(copyWish);
+  async copy(id: number, user: User): Promise<Wish> {
+    const queryRunner =
+      this.wishesRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const owner = await this.usersService.findById(user.id);
+      if (!owner) {
+        throw new Error('Пользователь не найден');
+      }
+
+      const wish = await this.wishesRepository.findOneByOrFail({ id });
+      const { description, image, link, name, price } = wish;
+      const copyWish = this.wishesRepository.create({
+        description,
+        image,
+        link,
+        name,
+        price,
+        owner,
+      });
+
+      wish.copied += 1;
+      await queryRunner.manager.save(wish);
+      const savedCopy = await queryRunner.manager.save(copyWish);
+
+      await queryRunner.commitTransaction();
+      return savedCopy;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} wish`;
+  async removeWish(id: number, user: User): Promise<Wish> {
+    console.log(id);
+
+    const wish = await this.wishesRepository.findOne({
+      where: { id },
+      relations: ['owner'],
+    });
+    console.log(wish.owner.id, user.id);
+
+    if (wish.owner.id !== user.id) {
+      throw new ForbiddenException('Вы не можете удалить чужую карточку');
+    }
+    return await this.wishesRepository.remove(wish);
   }
 }

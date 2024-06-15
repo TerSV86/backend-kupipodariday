@@ -16,6 +16,7 @@ import { JWTAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { User } from 'src/users/entities/user.entity';
 import { AuthUser } from 'src/common/decorators/user.decorator';
 import { query } from 'express';
+import { Wish } from './entities/wish.entity';
 
 @UseGuards(JWTAuthGuard)
 @Controller('wishes')
@@ -26,23 +27,19 @@ export class WishesController {
   async create(
     @Body() createWishDto: CreateWishDto,
     @AuthUser() user: User,
-  ): Promise<any> {
+  ): Promise<Wish> {
     return await this.wishesService.createWish(createWishDto, user.id);
   }
 
-  @Get()
-  findAll() {
-    return this.wishesService.findAll();
-  }
   // более конкретные маршруты должны быть выше общих
   @Get('last')
-  async findLast() {
+  async findLast(): Promise<Wish[]> {
     /* console.log('WishesLast'); */
     return this.wishesService.findLast();
   }
 
   @Get('top')
-  async findTop() {
+  async findTop(): Promise<Wish[]> {
     return this.wishesService.findTopWish();
   }
 
@@ -62,7 +59,7 @@ export class WishesController {
     return this.wishesService.copy(+id, user);
   }
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.wishesService.remove(+id);
+  remove(@Param('id') id: string, @AuthUser() user: User) {
+    return this.wishesService.removeWish(+id, user);
   }
 }
