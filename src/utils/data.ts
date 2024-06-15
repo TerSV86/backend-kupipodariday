@@ -111,3 +111,12 @@ export const resOffers = {
     },
   },
 };
+
+export const resUser = {
+  id: true,
+  username: true,
+  about: true,
+  avatar: true,
+  createdAt: true,
+  updatedAt: true,
+};

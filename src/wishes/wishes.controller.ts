@@ -3,19 +3,15 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
-  Query,
 } from '@nestjs/common';
 import { WishesService } from './wishes.service';
 import { CreateWishDto } from './dto/create-wish.dto';
-import { UpdateWishDto } from './dto/update-wish.dto';
 import { JWTAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { User } from 'src/users/entities/user.entity';
 import { AuthUser } from 'src/common/decorators/user.decorator';
-import { query } from 'express';
 import { Wish } from './entities/wish.entity';
 
 @UseGuards(JWTAuthGuard)
@@ -34,7 +30,6 @@ export class WishesController {
   // более конкретные маршруты должны быть выше общих
   @Get('last')
   async findLast(): Promise<Wish[]> {
-    /* console.log('WishesLast'); */
     return this.wishesService.findLast();
   }
 
@@ -45,14 +40,8 @@ export class WishesController {
 
   @Get(':id')
   findOne(@Param('id') id: string, @AuthUser() user: User) {
-    /* console.log('WishesController', id, user); */
     return this.wishesService.findOne(id, user.id);
   }
-
-  /* @Patch(':id')
-  update(@Param('id') id: number, @Body() updateWishDto: UpdateWishDto) {
-    return this.wishesService.update(id, updateWishDto);
-  } */
 
   @Post(':id/copy')
   copyWish(@Param('id') id: string, @AuthUser() user: User) {

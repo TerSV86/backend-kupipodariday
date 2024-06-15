@@ -1,18 +1,10 @@
-import {
-  Body,
-  Controller,
-  HttpException,
-  Post,
-  UseFilters,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, UseFilters, UseGuards } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import { AuthUser } from 'src/common/decorators/user.decorator';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { HttpExceptionFilter } from 'src/filters/HttpException.filter';
-import { User } from 'src/users/entities/user.entity';
 
 @Controller()
 @UseFilters(HttpExceptionFilter)
@@ -25,7 +17,6 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('signin')
   async login(@AuthUser() user): Promise<any> {
-    /* console.log('authcontr', user); */
     const token = await this.authService.login(user);
     if (token) return token;
   }

@@ -22,14 +22,11 @@ export class WishlistsService {
     const arrWishlist = await Promise.all(
       createWishlistDto.itemsId.map((id) => this.wishService.findById(id)),
     );
-    console.log('arrWishlist', arrWishlist);
     const wishlist = this.wishlistRepository.create({
       ...createWishlistDto,
       owner: user,
       items: [...arrWishlist],
     });
-    console.log(wishlist);
-
     return this.wishlistRepository.save(wishlist);
   }
 
@@ -54,7 +51,6 @@ export class WishlistsService {
       where: { id },
       relations: ['owner', 'items'],
     });
-    console.log('updateWishlist', updateWishlistDto), wishlist;
     let newItemsWishlist;
     if (itemsId) {
       newItemsWishlist = await Promise.all(
@@ -67,7 +63,6 @@ export class WishlistsService {
       image: image || wishlist.image,
       items: newItemsWishlist || wishlist.items,
     };
-    console.log('updateWishlist', updateWishlist);
 
     return this.wishlistRepository.save(updateWishlist);
   }

@@ -47,7 +47,6 @@ export class UsersController {
         about: true,
       },
     };
-    /* console.log('me', user.id, query); */
     return this.usersService.findOne(query);
   }
 

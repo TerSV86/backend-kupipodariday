@@ -14,7 +14,6 @@ export class JWTStrategy extends PassportStrategy(JwtStrategy) {
     super({
       // считывает заголовки
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-
       ignoreExpiration: false,
       // соль
       secretOrKey: configService.get<string>('JWT_SECRET'),
@@ -22,7 +21,6 @@ export class JWTStrategy extends PassportStrategy(JwtStrategy) {
   }
 
   async validate(payload: any) {
-    /* console.log('JWTStrategy', payload); */
     return this.userService.findById(payload.sub);
   }
 }

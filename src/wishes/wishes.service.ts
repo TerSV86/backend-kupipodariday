@@ -1,12 +1,17 @@
-import { ForbiddenException, Inject, Injectable, forwardRef } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { CreateWishDto } from './dto/create-wish.dto';
-import { UpdateWishDto } from './dto/update-wish.dto';
 import { Repository } from 'typeorm';
 import { Wish } from './entities/wish.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersService } from 'src/users/users.service';
 import { OffersService } from 'src/offers/offers.service';
 import { User } from 'src/users/entities/user.entity';
+import { resUser } from 'src/utils/data';
 
 @Injectable()
 export class WishesService {
@@ -16,7 +21,7 @@ export class WishesService {
     private readonly usersService: UsersService,
     @Inject(forwardRef(() => OffersService))
     private readonly offersService: OffersService,
-  ) { }
+  ) {}
 
   async createWish(createWishDto: CreateWishDto, id: number): Promise<Wish> {
     const owner = await this.usersService.findById(id);
@@ -24,14 +29,12 @@ export class WishesService {
       ...createWishDto,
       owner,
     });
-    /* console.log('wishesService', createWishDto); */
     return this.wishesRepository.save(wish);
   }
 
   async findWishById(user_id: number): Promise<Wish[]> {
     const wishes = await this.wishesRepository.find({
       where: { owner: { id: user_id } },
-      /* relations: ['owner', 'offers'], */
     });
     return wishes;
   }
@@ -42,35 +45,19 @@ export class WishesService {
 
   async findOne(wishId: string, user_id: number): Promise<any> {
     const id: number = parseInt(wishId, 10);
-    /* console.log(wishId, user_id); */
-
     const user = await this.usersService.findById(user_id);
     const wish = await this.wishesRepository.findOne({
       where: { id },
       relations: ['owner', 'offers', 'offers.user'],
       select: {
-        owner: {
-          id: true,
-          username: true,
-          about: true,
-          avatar: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+        owner: resUser,
         offers: {
           id: true,
           createdAt: true,
           updatedAt: true,
           amount: true,
           hidden: true,
-          user: {
-            id: true,
-            username: true,
-            about: true,
-            avatar: true,
-            createdAt: true,
-            updatedAt: true,
-          },
+          user: resUser,
         },
       },
     });
@@ -89,14 +76,7 @@ export class WishesService {
       order: { createdAt: 'DESC' },
       relations: ['owner', 'offers'],
       select: {
-        owner: {
-          id: true,
-          username: true,
-          about: true,
-          avatar: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+        owner: resUser,
       },
       take: 40,
     });
@@ -108,14 +88,7 @@ export class WishesService {
       order: { copied: 'DESC' },
       relations: ['owner', 'offers'],
       select: {
-        owner: {
-          id: true,
-          username: true,
-          about: true,
-          avatar: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+        owner: resUser,
       },
       take: 20,
     });
@@ -182,14 +155,10 @@ export class WishesService {
   }
 
   async removeWish(id: number, user: User): Promise<Wish> {
-    console.log(id);
-
     const wish = await this.wishesRepository.findOne({
       where: { id },
       relations: ['owner'],
     });
-    console.log(wish.owner.id, user.id);
-
     if (wish.owner.id !== user.id) {
       throw new ForbiddenException('Вы не можете удалить чужую карточку');
     }

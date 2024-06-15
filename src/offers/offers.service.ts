@@ -29,9 +29,7 @@ export class OffersService {
       `${createOfferDto.itemId}`,
       user.id,
     );
-    console.log(wish.owner.id, user.id);
     if (wish.owner.id === user.id) {
-      console.log('tyt');
       throw new ForbiddenException(
         'Вы не можете внести взнос в собственный подарок',
       );
@@ -52,12 +50,11 @@ export class OffersService {
       user,
       item: wish,
     });
-    /* console.log('OffersService', offer); */
     this.wishesService.updateRaised(calculateRaised, wish);
     return this.offersRepository.save(offer);
   }
 
-  findAll(/* id: number */) {
+  findAll() {
     return this.offersRepository.find(resOffers);
   }
 

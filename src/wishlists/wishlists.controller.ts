@@ -26,7 +26,6 @@ export class WishlistsController {
     @Body() createWishlistDto: CreateWishlistDto,
     @AuthUser() user: User,
   ): Promise<Wishlist> {
-    /* console.log('wishlist'); */
     return this.wishlistsService.create(createWishlistDto, user.id);
   }
 

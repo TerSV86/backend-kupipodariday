@@ -1,17 +1,10 @@
-import {
-  HttpException,
-  /* BadRequestException, */ Inject,
-  Injectable,
-  forwardRef,
-} from '@nestjs/common';
+import { HttpException, Inject, Injectable, forwardRef } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
-/* import * as bcrypt from 'bcrypt'; */
 import { hashValue } from 'src/helpers/hash';
-import { Wish } from 'src/wishes/entities/wish.entity';
 import { WishesService } from 'src/wishes/wishes.service';
 
 @Injectable()
@@ -22,30 +15,7 @@ export class UsersService {
     private readonly wishesService: WishesService,
   ) {}
 
-  /* async create(createUserDto: CreateUserDto) {
-    const existUser = await this.userRepository.findOne({
-      where: {
-        email: createUserDto.email,
-      },
-    });
-    if (existUser)
-      throw new BadRequestException(
-        'Пользователь с таким email уже существует',
-      );
-    const salt = 10;
-    const user = await this.userRepository.save({
-      email: createUserDto.email,
-      username: createUserDto.username,
-      about: createUserDto.about,
-      password: await bcrypt.hash(createUserDto.password, salt),
-      avatar: createUserDto.avatar,
-    });
-    return user;
-  } */
-
   async signup(createUserDto: CreateUserDto): Promise<User> {
-    /* console.log('singup', createUserDto); */
-
     const { password, email, username } = createUserDto;
     const existingEmail = await this.userRepository.findOne({
       where: { email },
@@ -68,14 +38,10 @@ export class UsersService {
   }
 
   async findOne(query: FindOneOptions<User>) {
-    /* console.log('userservice-findone', query); */
     return this.userRepository.findOneOrFail(query);
   }
   //используется в сервисе авторизации
   async findById(id: number) {
-    const user = await this.userRepository.findOneBy({ id });
-    /* console.log('UserServer-findByid', user, id); */
-
     return await this.userRepository.findOneBy({ id });
   }
 
@@ -91,7 +57,6 @@ export class UsersService {
         updatedAt: true,
       },
     });
-    /* console.log('userservice-findUserName', user); */
     return user;
   }
 
@@ -161,14 +126,6 @@ export class UsersService {
 
     return this.userRepository.findOne(res);
   }
-  /* async findByQuery(query: string) {
-
-    const user = await this.userRepository.find({
-      where: { username: query },
-    });
-    console.log(name);
-    return user;
-  } */
 
   async findByQuery(query: string): Promise<User[]> {
     const users = await this.userRepository.find({
