@@ -12,6 +12,8 @@ import { OffersModule } from './offers/offers.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './config/winstonConfig';
 
 @Module({
   imports: [
@@ -26,20 +28,17 @@ import { WishlistsModule } from './wishlists/wishlists.module';
         username: configServives.get<string>('DB_USERNAME'),
         password: configServives.get<string>('DB_PASSWORD'),
         database: configServives.get<string>('DB_NAME'),
-        entities: [
-          __dirname +
-            '/**/*.entity{.js, .ts}' /* User, Wish, Offer, Wishlist */,
-        ], //сущности, которые описывают базу данных.
+        entities: [__dirname + '/**/*.entity{.js, .ts}'], //сущности, которые описывают базу данных.
         synchronize: true, //подгоняeт базу в СУБД к той, что описана в ORM.
       }),
       inject: [ConfigService],
     }),
-    /*  TypeOrmModule.forFeature([User, Wish, Offer, Wishlist]), */ //обеспечивает доступ к сущностям User, Wish, Offer, Wishlist в AppModule
     UsersModule,
     WishesModule,
     OffersModule,
     WishlistsModule,
     AuthModule,
+    WinstonModule.forRoot(winstonConfig),
   ],
   controllers: [AppController],
   providers: [AppService],

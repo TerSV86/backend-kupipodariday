@@ -18,4 +18,8 @@ import { Offer } from 'src/offers/entities/offer.entity';
   providers: [WishesService],
   exports: [WishesService],
 })
-export class WishesModule {}
+export class WishesModule {
+  static forRoot(): import("@nestjs/common").Type<any> | import("@nestjs/common").DynamicModule | Promise<import("@nestjs/common").DynamicModule> | import("@nestjs/common").ForwardReference<any> {
+    throw new Error('Method not implemented.');
+  }
+}
