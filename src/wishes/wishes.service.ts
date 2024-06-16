@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  HttpException,
   Inject,
   Injectable,
   forwardRef,
@@ -46,6 +47,9 @@ export class WishesService {
   async findOne(wishId: string, user_id: number): Promise<any> {
     const id: number = parseInt(wishId, 10);
     const user = await this.usersService.findById(user_id);
+    if (!user) {
+      throw new Error('Пользователь не найден');
+    }
     const wish = await this.wishesRepository.findOne({
       where: { id },
       relations: ['owner', 'offers', 'offers.user'],
@@ -124,12 +128,22 @@ export class WishesService {
     await queryRunner.startTransaction();
 
     try {
-      const owner = await this.usersService.findById(user.id);
+      const owner = await this.usersService.findOne({
+        where: { id: user.id },
+        relations: ['wihses'],
+      });
+
       if (!owner) {
         throw new Error('Пользователь не найден');
       }
-
       const wish = await this.wishesRepository.findOneByOrFail({ id });
+      const existingCopy = await this.wishesRepository.findOne({
+        where: { owner: { id: user.id }, name: wish.name, link: wish.link },
+      });
+
+      if (existingCopy) {
+        throw new HttpException('Вы уже копировали себе этот подарок', 409);
+      }
       const { description, image, link, name, price } = wish;
       const copyWish = this.wishesRepository.create({
         description,

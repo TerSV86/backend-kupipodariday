@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable, UseFilters } from '@nestjs/common';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
 import { UpdateWishlistDto } from './dto/update-wishlist.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,8 +7,10 @@ import { Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { WishesService } from 'src/wishes/wishes.service';
 import { User } from 'src/users/entities/user.entity';
+import { HttpExceptionFilter } from 'src/filters/HttpException.filter';
 
 @Injectable()
+@UseFilters(HttpExceptionFilter)
 export class WishlistsService {
   constructor(
     @InjectRepository(Wishlist)
@@ -45,12 +47,22 @@ export class WishlistsService {
     });
   }
 
-  async updateWishlist(id: number, updateWishlistDto: UpdateWishlistDto) {
+  async updateWishlist(
+    id: number,
+    updateWishlistDto: UpdateWishlistDto,
+    user: User,
+  ) {
     const { name, image, itemsId } = updateWishlistDto;
     const wishlist = await this.wishlistRepository.findOne({
       where: { id },
       relations: ['owner', 'items'],
     });
+    if (user.id !== wishlist.owner.id) {
+      throw new HttpException(
+        'Вы не можете редактировать чужие списки подарков',
+        403,
+      );
+    }
     let newItemsWishlist;
     if (itemsId) {
       newItemsWishlist = await Promise.all(
@@ -67,8 +79,17 @@ export class WishlistsService {
     return this.wishlistRepository.save(updateWishlist);
   }
 
-  async remove(id: number) {
-    const wishlist = await this.wishlistRepository.findOne({ where: { id } });
+  async remove(id: number, user: User) {
+    const wishlist = await this.wishlistRepository.findOne({
+      where: { id },
+      relations: ['owner'],
+    });
+    if (wishlist.owner.id !== user.id) {
+      throw new HttpException(
+        'Вы не можете удалять чужие списки подарков',
+        403,
+      );
+    }
     return await this.wishlistRepository.remove(wishlist);
   }
 }

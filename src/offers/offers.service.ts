@@ -14,6 +14,7 @@ import { resOffers } from 'src/utils/data';
 
 @Injectable()
 export class OffersService {
+  connection: any;
   constructor(
     @InjectRepository(Offer)
     private readonly offersRepository: Repository<Offer>,
