@@ -23,51 +23,41 @@
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
 ## Description
+Проект КупиПодариДай, сервис списков желаний, где пользователи могут делиться своими желаемыми подарками и вносить свой вклад в подарки для других. Этот проект предоставляет комплексный API для управления списками желаний, профилями пользователей и взносами. Этот README проведет вас через настройку проекта, понимание его основных функций и использование предоставленного API. Этот проект разработан с использованием NestJS и выполнялся для практического освоения этого фреймворка.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Installation
 
+1. Клонируйте репозиторий:
 ```bash
-$ npm install
+git clone [https://github.com/your-repo/kupipodaridai.git](https://github.com/TerSV86/backend-kupipodariday.git)
+cd kupipodaridai
 ```
-
-## Running the app
-
+2. Установка внутренних зависимостей:
 ```bash
-# development
-$ npm run start
-
-# watch mode
+npm install
+```
+3. Start the backend server:
+```bash
 $ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
-
-## Test
-
+4. Клонируйте репозиторий frontend:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone [https://github.com/your-repo/kupipodaridai-frontend.git](https://github.com/yandex-praktikum/kupipodariday-frontend.git)
+cd kupipodaridai-frontend
 ```
+5. Установка зависимостей интерфейса:
+```bash
+npm install
+```
+6. Запустите интерфейс в режиме разработки:
+```bash
+npm start 
+```
+## Project Infrastructure
+- Бэкэнд: NestJS для управления API.
+- Фронтенд: React.js для пользовательского интерфейса.
+- База данных: PostgreSQL для хранения информации о пользователях и подарках.
+- Аутентификация: JWT (JSON Web Token) для безопасной аутентификации.
 
-## Support
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
